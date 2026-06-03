@@ -1,0 +1,2 @@
+accuracy,precision,recall,f1,roc_auc,model,time_label,n_features,n_rows,cv_best_roc_auc
+0.8093907210732253,0.8086924219910847,0.8108007448789571,0.8097452110842477,0.8956880618010684,XGBoost,15minute,91,26834,
