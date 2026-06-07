@@ -1,2 +1,0 @@
-accuracy,precision,recall,f1,roc_auc,model,time_label,hidden_dims,dropout,epochs_run,n_features,n_rows,device
-0.8082727780883175,0.813874147081122,0.7996275605214153,0.806687957918467,0.895617031676797,MLP,15minute,64-32-16,0.2,15,91,26834,cpu
