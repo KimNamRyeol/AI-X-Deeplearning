@@ -1,0 +1,2 @@
+accuracy,precision,recall,f1,roc_auc,model,time_label,hidden_dims,dropout,activation,optimizer,learning_rate,weight_decay,epochs_run,best_epoch,best_val_loss,n_features,n_rows,device
+0.8073411589342276,0.812570995834911,0.7992551210428306,0.8058580548253849,0.8956573723436608,MLP,15minute,64-32-16,0.2,relu,AdamW,0.001,0.0001,15,6,0.43045175075531006,91,26834,cpu

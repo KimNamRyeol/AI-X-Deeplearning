@@ -1,0 +1,2 @@
+accuracy,precision,recall,f1,roc_auc,model,experiment_label,time_label,n_features,n_rows,cv_best_roc_auc,decision_threshold,threshold_metric,threshold_val_score
+0.8092043972424073,0.8286505738029284,0.7798882681564245,0.8035303146584805,0.8959787090153406,XGBoost,threshold,15minute,91,26834,,0.5450000000000002,accuracy,0.7963365414467557

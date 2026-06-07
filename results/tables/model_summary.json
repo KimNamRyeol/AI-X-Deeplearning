@@ -1,0 +1,53 @@
+{
+  "best_model": "SoftVotingEnsemble",
+  "best_time_label": "15minute",
+  "best_accuracy": 0.8099496925656792,
+  "best_f1": 0.8092031425364759,
+  "best_roc_auc": 0.8970561728163619,
+  "accuracy_gain_from_10_to_15_minutes": {
+    "MLP": 0.06103294234960066,
+    "XGBoost": 0.06043199331858695
+  },
+  "xgboost_15minute_top_features": [
+    {
+      "feature": "diff_totalGolds",
+      "importance": 0.30066818
+    },
+    {
+      "feature": "diff_avgLevel",
+      "importance": 0.112961
+    },
+    {
+      "feature": "diff_totalLevel",
+      "importance": 0.10624934
+    },
+    {
+      "feature": "blueObjectiveScore",
+      "importance": 0.030605458
+    },
+    {
+      "feature": "diff_dragon",
+      "importance": 0.025860244
+    },
+    {
+      "feature": "diff_objectiveScore",
+      "importance": 0.024638657
+    },
+    {
+      "feature": "blueDragon",
+      "importance": 0.02297489
+    },
+    {
+      "feature": "redDragon",
+      "importance": 0.02249949
+    },
+    {
+      "feature": "diff_firstDragon",
+      "importance": 0.020086112
+    },
+    {
+      "feature": "diff_kill",
+      "importance": 0.018971028
+    }
+  ]
+}
