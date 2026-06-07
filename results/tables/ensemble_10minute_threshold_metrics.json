@@ -1,0 +1,17 @@
+{
+  "metrics": {
+    "accuracy": 0.7455509276789095,
+    "precision": 0.7516415604480494,
+    "recall": 0.7351718927087268,
+    "f1": 0.7433155080213903,
+    "roc_auc": 0.8239973791532285,
+    "model": "SoftVotingEnsemble",
+    "experiment_label": "threshold",
+    "time_label": "10minute",
+    "xgboost_weight": 0.65,
+    "mlp_weight": 0.35,
+    "decision_threshold": 0.5,
+    "threshold_metric": "fixed_0.5",
+    "threshold_val_score": null
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "metrics": {
+    "accuracy": 0.748769405528209,
+    "precision": 0.7761506276150628,
+    "recall": 0.7007933509633547,
+    "f1": 0.7365495334524519,
+    "roc_auc": 0.8217855737295954,
+    "model": "MLP",
+    "experiment_label": "threshold",
+    "time_label": "10minute",
+    "hidden_dims": "64-32-16",
+    "dropout": 0.2,
+    "activation": "relu",
+    "optimizer": "AdamW",
+    "learning_rate": 0.001,
+    "weight_decay": 0.0001,
+    "decision_threshold": 0.5400000000000003,
+    "threshold_metric": "accuracy",
+    "threshold_val_score": 0.738801261829653,
+    "epochs_run": 15,
+    "best_epoch": 11,
+    "best_val_loss": 0.5225970149040222,
+    "n_features": 91,
+    "n_rows": 26409,
+    "device": "cpu"
+  },
+  "data_summary": {
+    "n_rows": 26409,
+    "n_columns": 51,
+    "missing_values": 0,
+    "blueWins_0_count": 13175,
+    "blueWins_1_count": 13234,
+    "blueWins_1_ratio": 0.5011170434321632
+  }
+}

@@ -10,9 +10,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import pickle
 import sys
 from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+os.environ.setdefault("MPLCONFIGDIR", str(PROJECT_ROOT / ".matplotlib-cache"))
+os.environ.setdefault("XDG_CACHE_HOME", str(PROJECT_ROOT / ".cache"))
 
 import matplotlib
 matplotlib.use("Agg")
@@ -29,14 +34,14 @@ from sklearn.metrics import (
     recall_score,
     roc_auc_score,
 )
-from sklearn.model_selection import RandomizedSearchCV
+from sklearn.model_selection import RandomizedSearchCV, train_test_split
 from xgboost import XGBClassifier
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.append(str(PROJECT_ROOT))
 
 from src.preprocessing import load_prepare_split, summarize_dataset, load_dataset
+from src.metrics_utils import find_best_threshold, threshold_predictions
 
 
 def evaluate_binary_classifier(y_true, y_pred, y_proba) -> dict[str, float]:
@@ -104,6 +109,9 @@ def train_xgboost(
     random_state: int = 42,
     tune: bool = True,
     quick: bool = False,
+    tune_threshold: bool = False,
+    threshold_metric: str = "accuracy",
+    experiment_label: str = "",
 ) -> dict[str, float]:
     output_dir.mkdir(parents=True, exist_ok=True)
     (output_dir / "figures").mkdir(parents=True, exist_ok=True)
@@ -127,47 +135,76 @@ def train_xgboost(
     if quick:
         tune = False
 
+    if tune_threshold:
+        X_fit, X_val, y_fit, y_val = train_test_split(
+            X_train,
+            y_train,
+            test_size=0.15,
+            random_state=random_state,
+            stratify=y_train,
+        )
+    else:
+        X_fit, y_fit = X_train, y_train
+        X_val = y_val = None
+
     if tune:
         param_dist = {
-            "n_estimators": [100, 200, 300, 500] if not quick else [50, 80, 100],
+            "n_estimators": [200, 300, 500, 800] if not quick else [50, 80, 100],
             "max_depth": [2, 3, 4, 5],
             "learning_rate": [0.01, 0.03, 0.05, 0.1],
             "subsample": [0.75, 0.85, 1.0],
             "colsample_bytree": [0.75, 0.85, 1.0],
             "min_child_weight": [1, 3, 5],
-            "reg_lambda": [0.5, 1.0, 2.0],
+            "gamma": [0, 0.05, 0.1, 0.2],
+            "reg_alpha": [0, 0.01, 0.1],
+            "reg_lambda": [0.5, 1.0, 2.0, 5.0],
         }
         search = RandomizedSearchCV(
             base_model,
             param_distributions=param_dist,
-            n_iter=30,
+            n_iter=40 if not quick else 8,
             scoring="roc_auc",
             cv=5,
             random_state=random_state,
             n_jobs=1,
             verbose=0,
         )
-        search.fit(X_train, y_train)
+        search.fit(X_fit, y_fit)
         model = search.best_estimator_
         best_params = search.best_params_
         cv_best_score = float(search.best_score_)
     else:
-        model = base_model.fit(X_train, y_train)
+        model = base_model.fit(X_fit, y_fit)
         best_params = model.get_params()
         cv_best_score = None
 
-    y_pred = model.predict(X_test)
+    threshold = 0.5
+    threshold_val_score = None
+    if tune_threshold and X_val is not None and y_val is not None:
+        y_val_proba = model.predict_proba(X_val)[:, 1]
+        threshold, threshold_val_score = find_best_threshold(
+            y_val,
+            y_val_proba,
+            metric=threshold_metric,
+        )
+
     y_proba = model.predict_proba(X_test)[:, 1]
+    y_pred = threshold_predictions(y_proba, threshold)
     metrics = evaluate_binary_classifier(y_test, y_pred, y_proba)
     metrics.update({
         "model": "XGBoost",
+        "experiment_label": experiment_label or "baseline",
         "time_label": time_label,
         "n_features": len(feature_names),
         "n_rows": summary["n_rows"],
         "cv_best_roc_auc": cv_best_score,
+        "decision_threshold": threshold,
+        "threshold_metric": threshold_metric if tune_threshold else "fixed_0.5",
+        "threshold_val_score": threshold_val_score,
     })
 
-    prefix = f"xgboost_{time_label}"
+    suffix = f"_{experiment_label}" if experiment_label else ""
+    prefix = f"xgboost_{time_label}{suffix}"
     with open(output_dir / "tables" / f"{prefix}_metrics.json", "w", encoding="utf-8") as f:
         json.dump({"metrics": metrics, "best_params": best_params, "data_summary": summary}, f, indent=2, ensure_ascii=False)
     pd.DataFrame([metrics]).to_csv(output_dir / "tables" / f"{prefix}_metrics.csv", index=False)
@@ -176,6 +213,12 @@ def train_xgboost(
     importance.to_csv(output_dir / "tables" / f"{prefix}_feature_importance.csv", index=False)
     plot_confusion_matrix(y_test, y_pred, output_dir / "figures" / f"{prefix}_confusion_matrix.png", f"XGBoost Confusion Matrix ({time_label})")
     plot_roc_curve(y_test, y_proba, output_dir / "figures" / f"{prefix}_roc_curve.png", f"XGBoost ROC Curve ({time_label})")
+
+    pd.DataFrame({
+        "y_true": y_test.to_numpy(),
+        "y_proba": y_proba,
+        "y_pred": y_pred,
+    }).to_csv(output_dir / "tables" / f"{prefix}_predictions.csv", index=False)
 
     with open(model_dir / f"{prefix}.pkl", "wb") as f:
         pickle.dump(model, f)
@@ -192,6 +235,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--random-state", type=int, default=42)
     parser.add_argument("--no-tune", action="store_true", help="Skip RandomizedSearchCV and train one configured model.")
     parser.add_argument("--quick", action="store_true", help="Use a smaller search space for a fast smoke test.")
+    parser.add_argument("--tune-threshold", action="store_true", help="Tune the decision threshold on a validation split.")
+    parser.add_argument("--threshold-metric", type=str, default="accuracy", choices=["accuracy", "f1"])
+    parser.add_argument("--experiment-label", type=str, default="", help="Suffix for saving additional experiment outputs.")
     return parser.parse_args()
 
 
@@ -205,5 +251,8 @@ if __name__ == "__main__":
         random_state=args.random_state,
         tune=not args.no_tune,
         quick=args.quick,
+        tune_threshold=args.tune_threshold,
+        threshold_metric=args.threshold_metric,
+        experiment_label=args.experiment_label,
     )
     print(json.dumps(metrics, indent=2, ensure_ascii=False))

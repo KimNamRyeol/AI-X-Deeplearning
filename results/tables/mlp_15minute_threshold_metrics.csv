@@ -1,0 +1,2 @@
+accuracy,precision,recall,f1,roc_auc,model,experiment_label,time_label,hidden_dims,dropout,activation,optimizer,learning_rate,weight_decay,decision_threshold,threshold_metric,threshold_val_score,epochs_run,best_epoch,best_val_loss,n_features,n_rows,device
+0.8067821874417738,0.7974729241877256,0.8227188081936685,0.8098991750687443,0.8956573723436608,MLP,threshold,15minute,64-32-16,0.2,relu,AdamW,0.001,0.0001,0.47000000000000014,accuracy,0.7935423781434338,15,6,0.43045175075531006,91,26834,cpu

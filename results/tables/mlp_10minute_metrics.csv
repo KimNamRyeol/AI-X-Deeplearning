@@ -1,2 +1,2 @@
-accuracy,precision,recall,f1,roc_auc,model,time_label,hidden_dims,dropout,epochs_run,n_features,n_rows,device
-0.7457402499053389,0.7542901716068643,0.7306384586324141,0.7422759547111879,0.8218298757893544,MLP,10minute,64-32-16,0.2,15,91,26409,cpu
+accuracy,precision,recall,f1,roc_auc,model,time_label,hidden_dims,dropout,activation,optimizer,learning_rate,weight_decay,epochs_run,best_epoch,best_val_loss,n_features,n_rows,device
+0.746308216584627,0.7457690861226025,0.7491499811106913,0.7474557105163966,0.8217855737295954,MLP,10minute,64-32-16,0.2,relu,AdamW,0.001,0.0001,15,11,0.5225970149040222,91,26409,cpu
